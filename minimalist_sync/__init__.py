@@ -20,25 +20,25 @@ import time
 
 from aqt import gui_hooks, mw
 from aqt.qt import (
-    QAbstractItemView,
     QAction,
+    QCheckBox,
     QDialog,
     QDialogButtonBox,
     QFileDialog,
+    QHBoxLayout,
     QLabel,
-    QListWidget,
-    QListWidgetItem,
     QMenu,
-    Qt,
+    QScrollArea,
     QTimer,
     QVBoxLayout,
+    QWidget,
 )
 from aqt.utils import openLink, showInfo, showWarning, tooltip
 
 from . import folders
 from .status import build_status, write_status
 
-ADDON_VERSION = "1.0.0"
+ADDON_VERSION = "1.0.1"
 DECKS_KEY = "minimalistSyncDecks"  # stored in the collection, so it follows AnkiWeb sync
 REPO_URL = "https://github.com/zkashef/minimalist-anki-sync"
 # At most one write this often while reviewing.
@@ -112,36 +112,50 @@ def _sync_soon() -> None:
 
 
 class DeckDialog(QDialog):
-    """A checklist of decks. Ticking a deck counts its subdecks too."""
+    """A checkbox for every deck and subdeck. Ticking a deck counts its subdecks too."""
 
     def __init__(self) -> None:
         super().__init__(mw)
         self.setWindowTitle("Minimalist: decks that count")
         layout = QVBoxLayout(self)
-        layout.addWidget(QLabel("Reviews in these decks (and their subdecks) count toward your goals on your iPhone."))
-        self.list = QListWidget()
-        self.list.setSelectionMode(QAbstractItemView.SelectionMode.NoSelection)
+        label = QLabel("Tick the decks whose reviews count toward your goals on your iPhone. "
+                       "A ticked deck includes its subdecks.")
+        label.setWordWrap(True)
+        layout.addWidget(label)
+
+        # Real checkboxes rather than checkable list rows, whose boxes some
+        # Anki themes draw invisibly.
+        self.boxes: list[tuple[int, QCheckBox]] = []
         chosen = set(_selected_decks())
+        content = QWidget()
+        rows = QVBoxLayout(content)
+        rows.setSpacing(4)
         for deck in sorted(mw.col.decks.all_names_and_ids(), key=lambda d: d.name.lower()):
-            item = QListWidgetItem("    " * deck.name.count("::") + deck.name.split("::")[-1])
-            item.setData(Qt.ItemDataRole.UserRole, int(deck.id))
-            item.setFlags(item.flags() | Qt.ItemFlag.ItemIsUserCheckable)
-            item.setCheckState(Qt.CheckState.Checked if int(deck.id) in chosen else Qt.CheckState.Unchecked)
-            item.setToolTip(deck.name)
-            self.list.addItem(item)
-        layout.addWidget(self.list)
+            box = QCheckBox(deck.name.split("::")[-1])
+            box.setChecked(int(deck.id) in chosen)
+            box.setToolTip(deck.name)
+            row = QHBoxLayout()
+            row.setContentsMargins(24 * deck.name.count("::"), 0, 0, 0)
+            row.addWidget(box)
+            row.addStretch()
+            rows.addLayout(row)
+            self.boxes.append((int(deck.id), box))
+        rows.addStretch()
+        scroll = QScrollArea()
+        scroll.setWidgetResizable(True)
+        scroll.setWidget(content)
+        layout.addWidget(scroll)
+
         buttons = QDialogButtonBox(QDialogButtonBox.StandardButton.Ok | QDialogButtonBox.StandardButton.Cancel)
+        clear = buttons.addButton("Clear All", QDialogButtonBox.ButtonRole.ResetRole)
+        clear.clicked.connect(lambda: [box.setChecked(False) for _, box in self.boxes])
         buttons.accepted.connect(self.accept)
         buttons.rejected.connect(self.reject)
         layout.addWidget(buttons)
-        self.resize(420, 520)
+        self.resize(460, 560)
 
     def chosen(self) -> list[int]:
-        return [
-            int(self.list.item(i).data(Qt.ItemDataRole.UserRole))
-            for i in range(self.list.count())
-            if self.list.item(i).checkState() == Qt.CheckState.Checked
-        ]
+        return [did for did, box in self.boxes if box.isChecked()]
 
 
 def select_decks() -> None:
