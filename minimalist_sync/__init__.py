@@ -38,7 +38,7 @@ from aqt.utils import openLink, showInfo, showWarning, tooltip
 from . import folders
 from .status import build_status, write_status
 
-ADDON_VERSION = "1.0.1"
+ADDON_VERSION = "1.1.0"
 DECKS_KEY = "minimalistSyncDecks"  # stored in the collection, so it follows AnkiWeb sync
 REPO_URL = "https://github.com/zkashef/minimalist-anki-sync"
 # At most one write this often while reviewing.
