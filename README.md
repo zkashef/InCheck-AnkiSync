@@ -9,6 +9,7 @@ There's no account and no server. The add-on writes a small file of counts into 
 Only counts and deck names, for the decks you choose:
 
 - reviews done today, cards studied and new cards seen (from Anki's review log, since the day started);
+- time spent studying today, and how long an answer usually takes (over the last 30 days), so the phone can estimate how long is left;
 - cards still due today (new, learning, review), after your deck limits, the same numbers Anki shows;
 - the time Anki's next day starts ("Next day starts at" in Preferences).
 

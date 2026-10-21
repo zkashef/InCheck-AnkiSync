@@ -47,6 +47,7 @@ def build_status(col: Any, deck_ids: Iterable[int], addon_version: str, now: flo
             "total_cards": _card_count(col, dids),
             "done_today": _done_today(col, dids, day_start),
             "due": _due(col, tree, did),
+            "seconds_per_answer": _seconds_per_answer(col, dids, cutoff),
         })
 
     # Totals over the selection without counting a subdeck twice when its
@@ -72,6 +73,7 @@ def build_status(col: Any, deck_ids: Iterable[int], addon_version: str, now: flo
             "total_cards": _card_count(col, all_ids),
             "done_today": _done_today(col, all_ids, day_start),
             "due": total_due,
+            "seconds_per_answer": _seconds_per_answer(col, all_ids, cutoff),
         },
     }
 
@@ -128,13 +130,34 @@ def _done_today(col: Any, dids: list[int], day_start: int) -> dict:
         f"where ease > 0 and type in {types} and {card_filter} group by cid) where first >= ?",
         since,
     ) or 0
+    seconds = (col.db.scalar(
+        f"select sum(time) from revlog where id >= ? and ease > 0 and type in {types} and {card_filter}", since
+    ) or 0) // 1000
     return {
         "reviews": sum(n for n, _ in by_type.values()),
+        "seconds": int(seconds),
         "cards": cards,
         "new_cards": new_cards,
         "learning": by_type.get(0, (0, 0))[0] + by_type.get(2, (0, 0))[0],
         "review": by_type.get(1, (0, 0))[0] + by_type.get(3, (0, 0))[0],
     }
+
+
+def _seconds_per_answer(col: Any, dids: list[int], cutoff: int) -> float | None:
+    """How long an answer usually takes in these decks, over the last 30 days.
+
+    Anki records each answer's time, capped at the deck's "maximum answer
+    seconds". None until there are a few answers to go on.
+    """
+    since = (cutoff - 30 * SECONDS_PER_DAY) * 1000
+    card_filter = f"cid in (select id from cards where did in {_ids(dids)} or odid in {_ids(dids)})"
+    count, total = col.db.first(
+        f"select count(), sum(time) from revlog where id >= ? and ease > 0 and type in {_ids(STUDY_TYPES)} and {card_filter}",
+        since,
+    ) or (0, 0)
+    if not count or count < 5 or not total:
+        return None
+    return round(total / count / 1000, 1)
 
 
 def _due(col: Any, tree: Any, did: int) -> dict:

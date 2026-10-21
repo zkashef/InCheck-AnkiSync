@@ -46,6 +46,7 @@ def answer(col, did, times):
         queued = col.sched.get_queued_cards(fetch_limit=1).cards[0]
         card = col.get_card(queued.card.id)
         card.start_timer()
+        card.timer_started -= 3  # as if the answer took three seconds
         col.sched.answer_card(col.sched.build_answer(card=card, states=queued.states, rating=CardAnswer.GOOD))
 
 
@@ -66,6 +67,10 @@ def test_counts_reviews_and_due(col):
     assert after["done_today"]["cards"] == 4
     assert after["done_today"]["new_cards"] == 4
     assert after["due"]["new"] == 16
+    assert after["done_today"]["seconds"] >= 12
+    assert after["seconds_per_answer"] is None  # fewer than 5 answers so far
+    answer(col, spanish, 2)
+    assert build_status(col, [spanish], "test")["decks"][0]["seconds_per_answer"] == 3.0
 
 
 def test_subdecks_count_once(col):
