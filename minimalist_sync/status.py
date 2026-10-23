@@ -1,5 +1,5 @@
-# Minimalist Anki Sync
-# Copyright (C) 2026 the Minimalist Anki Sync authors
+# In Check Anki Sync
+# Copyright (C) 2026 the In Check Anki Sync authors
 #
 # This program is free software: you can redistribute it and/or modify it
 # under the terms of the GNU Affero General Public License as published by the
