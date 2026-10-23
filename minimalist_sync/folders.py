@@ -1,5 +1,5 @@
-# Minimalist Anki Sync
-# Copyright (C) 2026 the Minimalist Anki Sync authors
+# In Check Anki Sync
+# Copyright (C) 2026 the In Check Anki Sync authors
 #
 # This program is free software: you can redistribute it and/or modify it
 # under the terms of the GNU Affero General Public License as published by the
@@ -16,7 +16,9 @@ import sys
 # The app's iCloud container, as it appears on disk.
 CONTAINER = "iCloud~com~zkashef~MinimalistChessPhone"
 # The name iCloud Drive shows for the container (NSUbiquitousContainerName).
-DISPLAY_NAME = "Minimalist"
+DISPLAY_NAME = "In Check"
+# What it was called before the app became In Check, for folders iCloud hasn't renamed yet.
+OLD_DISPLAY_NAME = "Minimalist"
 SUBFOLDER = "AnkiSync"
 
 
@@ -32,6 +34,7 @@ def candidates(home: str | None = None, platform: str | None = None) -> list[str
             os.path.join(drive, CONTAINER),
             os.path.join(drive, CONTAINER, "Documents"),
             os.path.join(drive, DISPLAY_NAME),
+            os.path.join(drive, OLD_DISPLAY_NAME),
         ]
     return []
 

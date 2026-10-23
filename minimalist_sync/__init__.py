@@ -1,12 +1,12 @@
-# Minimalist Anki Sync
-# Copyright (C) 2026 the Minimalist Anki Sync authors
+# In Check Anki Sync
+# Copyright (C) 2026 the In Check Anki Sync authors
 #
 # This program is free software: you can redistribute it and/or modify it
 # under the terms of the GNU Affero General Public License as published by the
 # Free Software Foundation, either version 3 of the License, or (at your
 # option) any later version. See LICENSE for the full text.
 
-"""Lets the Minimalist iPhone app see how much Anki you've studied today.
+"""Lets the In Check iPhone app see how much Anki you've studied today.
 
 The add-on writes a small file of counts (reviews done today and cards
 still due, per chosen deck) into the app's own iCloud Drive folder. iCloud
@@ -73,16 +73,16 @@ def sync_now(quiet: bool = True) -> bool:
     if not folder:
         if not quiet:
             showWarning(
-                "The Minimalist folder isn't in iCloud Drive on this computer yet.\n\n"
-                "1. On your iPhone, choose Anki as the unlock method in Minimalist.\n"
+                "The In Check folder isn't in iCloud Drive on this computer yet.\n\n"
+                "1. On your iPhone, choose Anki as the unlock method in the In Check app.\n"
                 "2. On this computer, turn on iCloud Drive with the same Apple ID.\n"
                 "3. Wait a minute, then try again.\n\n"
-                "On Windows, or if it still isn't found, use Minimalist > Sync Folder… to pick the folder."
+                "On Windows, or if it still isn't found, use In Check > Sync Folder… to pick the folder."
             )
         return False
     decks = _selected_decks()
     if not decks and not quiet:
-        showInfo("Choose the decks that count first: Minimalist > Select Decks…")
+        showInfo("Choose the decks that count first: In Check > Select Decks…")
         return False
     try:
         write_status(build_status(mw.col, decks, ADDON_VERSION), folder)
@@ -116,7 +116,7 @@ class DeckDialog(QDialog):
 
     def __init__(self) -> None:
         super().__init__(mw)
-        self.setWindowTitle("Minimalist: decks that count")
+        self.setWindowTitle("In Check: decks that count")
         layout = QVBoxLayout(self)
         label = QLabel("Tick the decks whose reviews count toward your goals on your iPhone. "
                        "A ticked deck includes its subdecks.")
@@ -174,10 +174,10 @@ def choose_folder() -> None:
         f"Detected iCloud folder:\n{detected or 'not found'}",
         f"Folder you picked:\n{current or 'none (using the detected folder)'}",
         "Pick a different folder only if the detected one is missing, for example with iCloud for Windows. "
-        "Choose the AnkiSync folder inside the Minimalist folder in iCloud Drive.",
+        "Choose the AnkiSync folder inside the In Check folder in iCloud Drive.",
     ]
-    showInfo("\n\n".join(lines), title="Minimalist sync folder")
-    picked = QFileDialog.getExistingDirectory(mw, "Choose the Minimalist AnkiSync folder", current or detected or "")
+    showInfo("\n\n".join(lines), title="In Check sync folder")
+    picked = QFileDialog.getExistingDirectory(mw, "Choose the In Check AnkiSync folder", current or detected or "")
     if picked:
         config = _config()
         config["folder"] = picked
@@ -194,16 +194,16 @@ def reset_folder() -> None:
 
 def how_to_use() -> None:
     showInfo(
-        "Minimalist unlocks the apps you've locked on your iPhone once you've done your Anki studying for the day.\n\n"
-        "1. On your iPhone, choose Anki as the unlock method in Minimalist and set your study goals.\n"
+        "In Check unlocks the apps you've locked on your iPhone once you've done your Anki studying for the day.\n\n"
+        "1. On your iPhone, choose Anki as the unlock method in the In Check app and set your study goals.\n"
         "2. On this computer, turn on iCloud Drive with the same Apple ID as your iPhone.\n"
-        "3. Here, choose Minimalist > Select Decks… and tick the decks that count.\n"
+        "3. Here, choose In Check > Select Decks… and tick the decks that count.\n"
         "4. Study as usual. Your progress is sent after each card (at most every 20 seconds), "
         "after each AnkiWeb sync, and when you close Anki.\n\n"
         "Reviews from AnkiMobile or AnkiDroid count once this computer has synced with AnkiWeb.\n\n"
         "Only counts and deck names are sent, through your own iCloud. No card content leaves Anki, "
         "and there's no account.",
-        title="Minimalist",
+        title="In Check",
     )
 
 
@@ -214,7 +214,7 @@ def check_for_updates() -> None:
 
 
 def _add_menu() -> None:
-    menu = QMenu("Minimalist", mw)
+    menu = QMenu("In Check", mw)
     for title, handler in [
         ("Select Decks…", select_decks),
         ("Sync Now", lambda: sync_now(quiet=False)),
