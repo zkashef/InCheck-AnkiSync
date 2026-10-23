@@ -40,7 +40,7 @@ from .status import build_status, write_status
 
 ADDON_VERSION = "1.1.0"
 DECKS_KEY = "minimalistSyncDecks"  # stored in the collection, so it follows AnkiWeb sync
-REPO_URL = "https://github.com/zkashef/minimalist-anki-sync"
+REPO_URL = "https://github.com/zkashef/InCheck-AnkiSync"
 # At most one write this often while reviewing.
 MIN_INTERVAL = 20.0
 
