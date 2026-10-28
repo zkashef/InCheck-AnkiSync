@@ -2,4 +2,4 @@ __pycache__/
 *.pyc
 *.ankiaddon
 .pytest_cache/
-minimalist_sync/meta.json
+in_check_sync/meta.json

@@ -1,0 +1,1 @@
+**folder**: where the add-on writes `status.json`. Leave it empty to use the In Check folder that iCloud Drive creates on this computer (detected automatically on macOS). Set it only if that folder isn't found, for example with iCloud for Windows. You can also set it from the **In Check > Sync folder…** menu.

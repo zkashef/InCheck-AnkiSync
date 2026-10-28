@@ -38,8 +38,12 @@ from aqt.utils import openLink, showInfo, showWarning, tooltip
 from . import folders
 from .status import build_status, write_status
 
-ADDON_VERSION = "1.1.0"
-DECKS_KEY = "minimalistSyncDecks"  # stored in the collection, so it follows AnkiWeb sync
+ADDON_VERSION = "1.2.0"
+DECKS_KEY = "inCheckSyncDecks"  # stored in the collection, so it follows AnkiWeb sync
+# Where versions before 1.2 kept the deck choice.
+OLD_DECKS_KEY = "minimalistSyncDecks"
+# The package name before 1.2, whose saved settings carry over.
+OLD_PACKAGE = "minimalist_sync"
 REPO_URL = "https://github.com/zkashef/InCheck-AnkiSync"
 # At most one write this often while reviewing.
 MIN_INTERVAL = 20.0
@@ -52,12 +56,32 @@ def _config() -> dict:
     return mw.addonManager.getConfig(__name__) or {}
 
 
+def _carry_over_folder() -> None:
+    """Keeps a sync folder picked in a copy from before 1.2, which was
+    installed as minimalist_sync and is turned off when this one installs."""
+    if _config().get("folder"):
+        return
+    try:
+        old = mw.addonManager.getConfig(OLD_PACKAGE) or {}
+    except Exception:
+        return
+    if old.get("folder"):
+        config = _config()
+        config["folder"] = old["folder"]
+        _save_config(config)
+
+
 def _save_config(config: dict) -> None:
     mw.addonManager.writeConfig(__name__, config)
 
 
 def _selected_decks() -> list[int]:
-    return [int(d) for d in (mw.col.get_config(DECKS_KEY, []) or [])] if mw.col else []
+    if not mw.col:
+        return []
+    decks = mw.col.get_config(DECKS_KEY, None)
+    if decks is None:
+        decks = mw.col.get_config(OLD_DECKS_KEY, [])
+    return [int(d) for d in (decks or [])]
 
 
 def _folder() -> str | None:
@@ -74,15 +98,15 @@ def sync_now(quiet: bool = True) -> bool:
         if not quiet:
             showWarning(
                 "The In Check folder isn't in iCloud Drive on this computer yet.\n\n"
-                "1. On your iPhone, choose Anki as the unlock method in the In Check app.\n"
+                "1. On your iPhone, open the Anki Sync setup in the In Check app.\n"
                 "2. On this computer, turn on iCloud Drive with the same Apple ID.\n"
                 "3. Wait a minute, then try again.\n\n"
-                "On Windows, or if it still isn't found, use In Check > Sync Folder… to pick the folder."
+                "On Windows, or if it still isn't found, use In Check > Sync folder… to pick the folder."
             )
         return False
     decks = _selected_decks()
     if not decks and not quiet:
-        showInfo("Choose the decks that count first: In Check > Select Decks…")
+        showInfo("Choose the decks that count first: In Check > Select decks…")
         return False
     try:
         write_status(build_status(mw.col, decks, ADDON_VERSION), folder)
@@ -92,7 +116,7 @@ def sync_now(quiet: bool = True) -> bool:
         return False
     _last_write = time.time()
     if not quiet:
-        tooltip("Sent to your iPhone through iCloud.")
+        tooltip("Saved to iCloud Drive for your iPhone.")
     return True
 
 
@@ -147,7 +171,7 @@ class DeckDialog(QDialog):
         layout.addWidget(scroll)
 
         buttons = QDialogButtonBox(QDialogButtonBox.StandardButton.Ok | QDialogButtonBox.StandardButton.Cancel)
-        clear = buttons.addButton("Clear All", QDialogButtonBox.ButtonRole.ResetRole)
+        clear = buttons.addButton("Clear all", QDialogButtonBox.ButtonRole.ResetRole)
         clear.clicked.connect(lambda: [box.setChecked(False) for _, box in self.boxes])
         buttons.accepted.connect(self.accept)
         buttons.rejected.connect(self.reject)
@@ -164,6 +188,7 @@ def select_decks() -> None:
     dialog = DeckDialog()
     if dialog.exec():
         mw.col.set_config(DECKS_KEY, dialog.chosen())
+        mw.col.remove_config(OLD_DECKS_KEY)
         sync_now(quiet=False)
 
 
@@ -195,11 +220,11 @@ def reset_folder() -> None:
 def how_to_use() -> None:
     showInfo(
         "In Check unlocks the apps you've locked on your iPhone once you've done your Anki studying for the day.\n\n"
-        "1. On your iPhone, choose Anki as the unlock method in the In Check app and set your study goals.\n"
+        "1. On your iPhone, choose Anki Sync as the unlock method in the In Check app and set your study goals.\n"
         "2. On this computer, turn on iCloud Drive with the same Apple ID as your iPhone.\n"
-        "3. Here, choose In Check > Select Decks… and tick the decks that count.\n"
+        "3. Here, choose In Check > Select decks… and tick the decks that count.\n"
         "4. Study as usual. Your progress is sent after each card (at most every 20 seconds), "
-        "after each AnkiWeb sync, and when you close Anki.\n\n"
+        "after each AnkiWeb sync, and when you open or close Anki.\n\n"
         "Reviews from AnkiMobile or AnkiDroid count once this computer has synced with AnkiWeb.\n\n"
         "Only counts and deck names are sent, through your own iCloud. No card content leaves Anki, "
         "and there's no account.",
@@ -216,14 +241,14 @@ def check_for_updates() -> None:
 def _add_menu() -> None:
     menu = QMenu("In Check", mw)
     for title, handler in [
-        ("Select Decks…", select_decks),
-        ("Sync Now", lambda: sync_now(quiet=False)),
-        ("Sync Folder…", choose_folder),
-        ("Use Detected Folder", reset_folder),
+        ("Select decks…", select_decks),
+        ("Sync now", lambda: sync_now(quiet=False)),
+        ("Sync folder…", choose_folder),
+        ("Use detected folder", reset_folder),
         (None, None),
-        ("How to Use", how_to_use),
-        ("Check for Updates", check_for_updates),
-        ("Source Code", lambda: openLink(REPO_URL)),
+        ("How to use", how_to_use),
+        ("Check for updates", check_for_updates),
+        ("Source code", lambda: openLink(REPO_URL)),
     ]:
         if title is None:
             menu.addSeparator()
@@ -241,6 +266,7 @@ def _add_menu() -> None:
 
 
 gui_hooks.main_window_did_init.append(_add_menu)
+gui_hooks.main_window_did_init.append(_carry_over_folder)
 gui_hooks.profile_did_open.append(lambda: sync_now())
 gui_hooks.reviewer_did_answer_card.append(lambda *_: _sync_soon())
 gui_hooks.sync_did_finish.append(lambda: sync_now())
