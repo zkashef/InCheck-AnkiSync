@@ -42,8 +42,9 @@ ADDON_VERSION = "1.2.0"
 DECKS_KEY = "inCheckSyncDecks"  # stored in the collection, so it follows AnkiWeb sync
 # Where versions before 1.2 kept the deck choice.
 OLD_DECKS_KEY = "minimalistSyncDecks"
-# The package name before 1.2, whose saved settings carry over.
-OLD_PACKAGE = "minimalist_sync"
+# Earlier installs whose saved settings carry over: the package name before
+# 1.2, and the file install for a copy that now comes from AnkiWeb.
+OLD_PACKAGES = ("in_check_sync", "minimalist_sync")
 REPO_URL = "https://github.com/zkashef/InCheck-AnkiSync"
 # At most one write this often while reviewing.
 MIN_INTERVAL = 20.0
@@ -57,18 +58,22 @@ def _config() -> dict:
 
 
 def _carry_over_folder() -> None:
-    """Keeps a sync folder picked in a copy from before 1.2, which was
-    installed as minimalist_sync and is turned off when this one installs."""
+    """Keeps a sync folder picked in an earlier install, which Anki turns off
+    when this one installs (see "conflicts" in manifest.json)."""
     if _config().get("folder"):
         return
-    try:
-        old = mw.addonManager.getConfig(OLD_PACKAGE) or {}
-    except Exception:
-        return
-    if old.get("folder"):
-        config = _config()
-        config["folder"] = old["folder"]
-        _save_config(config)
+    for package in OLD_PACKAGES:
+        if package == __name__:
+            continue
+        try:
+            old = mw.addonManager.getConfig(package) or {}
+        except Exception:
+            continue
+        if old.get("folder"):
+            config = _config()
+            config["folder"] = old["folder"]
+            _save_config(config)
+            return
 
 
 def _save_config(config: dict) -> None:
