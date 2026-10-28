@@ -10,7 +10,7 @@ import tempfile
 
 import pytest
 
-sys.path.insert(0, os.path.join(os.path.dirname(__file__), "..", "minimalist_sync"))
+sys.path.insert(0, os.path.join(os.path.dirname(__file__), "..", "in_check_sync"))
 
 from anki.collection import Collection  # noqa: E402
 
