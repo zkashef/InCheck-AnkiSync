@@ -21,7 +21,7 @@ No card content, notes, media or review history leaves Anki. The file is `status
 
 1. On your iPhone, pick **Anki Sync** as the unlock method in the In Check app. Its setup page creates the folder the add-on writes to.
 2. On your computer, turn on **iCloud Drive** with the same Apple ID as your iPhone.
-3. Install the add-on in Anki, then restart Anki. Once it's on AnkiWeb, use **Tools > Add-ons > Get Add-ons…** and enter the code shown in the app. Until then, build `in_check_sync.ankiaddon` with `./build.sh` (see below) and double-click it.
+3. In Anki, choose **Tools > Add-ons > Get Add-ons…**, enter the code **1560422238** (also shown in the app), then restart Anki. It's [In Check Anki Sync on AnkiWeb](https://ankiweb.net/shared/info/1560422238). You can also download `in_check_sync.ankiaddon` from [Releases](https://github.com/zkashef/InCheck-AnkiSync/releases) and double-click it.
 4. Choose **In Check > Select decks…** and tick the decks that count. Subdecks are included.
 
 Progress is sent after each answer (at most every 20 seconds), after each AnkiWeb sync, when a profile opens or closes, and with **In Check > Sync now**. Reviews done in AnkiMobile or AnkiDroid count once Anki Desktop has synced them from AnkiWeb.
@@ -34,7 +34,7 @@ Progress is sent after each answer (at most every 20 seconds), after each AnkiWe
 
 ### Updating from version 1.1 or earlier
 
-Earlier versions were installed as `minimalist_sync`. Installing 1.2 or later turns that copy off and keeps your chosen decks and sync folder. You can then delete the old copy in **Tools > Add-ons**.
+Earlier versions were installed as `minimalist_sync`. Installing 1.2 or later turns that copy off and keeps your chosen decks and sync folder. You can then delete the old copy in **Tools > Add-ons**. If you installed 1.2 from a file and then from AnkiWeb, keep the AnkiWeb copy (it gets updates) and delete the other.
 
 ## Development
 
